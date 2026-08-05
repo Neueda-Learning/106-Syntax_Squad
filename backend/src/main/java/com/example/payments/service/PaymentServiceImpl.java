@@ -43,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    private static final Set<String> SUPPORTED_CURRENCIES = Set.of("USD", "EUR", "GBP");
+    private static final Set<String> SUPPORTED_CURRENCIES = Set.of("USD", "EUR", "GBP", "INR");
 
     private static final Map<PaymentStatus, Set<PaymentStatus>> ALLOWED_TRANSITIONS = new EnumMap<>(PaymentStatus.class);
 
@@ -63,6 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentSendAttemptRepository paymentSendAttemptRepository;
     private final PaymentStatusHistoryRepository historyRepository;
     private final RetrySendService retrySendService;
+    private final CurrencyConversionService currencyConversionService;
     private final BigDecimal maxTransactionAmount;
     private final long intentExpiryMinutes;
     private final String defaultSourceAccount;
@@ -76,6 +77,7 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentSendAttemptRepository paymentSendAttemptRepository,
         PaymentStatusHistoryRepository historyRepository,
         RetrySendService retrySendService,
+        CurrencyConversionService currencyConversionService,
         @Value("${payment.limits.max-transaction-amount:10000}") BigDecimal maxTransactionAmount,
         @Value("${payment.intent.expiry-minutes:30}") long intentExpiryMinutes,
         @Value("${payment.single-user.account-number:ACC-001}") String defaultSourceAccount
@@ -88,6 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.paymentSendAttemptRepository = paymentSendAttemptRepository;
         this.historyRepository = historyRepository;
         this.retrySendService = retrySendService;
+        this.currencyConversionService = currencyConversionService;
         this.maxTransactionAmount = maxTransactionAmount;
         this.intentExpiryMinutes = intentExpiryMinutes;
         this.defaultSourceAccount = defaultSourceAccount;
@@ -243,7 +246,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String businessRuleCheck(Payment payment) {
-        if (payment.getAmount().compareTo(maxTransactionAmount) > 0) {
+        BigDecimal amountInBaseCurrency = currencyConversionService.convertToBase(payment.getAmount(), payment.getCurrency());
+        if (amountInBaseCurrency.compareTo(maxTransactionAmount) > 0) {
             return ErrorCode.LIMIT_EXCEEDED.name();
         }
 
@@ -251,11 +255,11 @@ public class PaymentServiceImpl implements PaymentService {
             .findById(payment.getSourceAccount())
             .orElseGet(() -> createSimulationSourceAccount(payment));
 
-        if (payment.getAmount().compareTo(sourceAccount.getBalance()) > 0) {
+        if (amountInBaseCurrency.compareTo(sourceAccount.getBalance()) > 0) {
             return ErrorCode.INSUFFICIENT_FUNDS.name();
         }
 
-        sourceAccount.setBalance(sourceAccount.getBalance().subtract(payment.getAmount()));
+        sourceAccount.setBalance(sourceAccount.getBalance().subtract(amountInBaseCurrency));
         accountRepository.save(sourceAccount);
         return null;
     }
@@ -367,7 +371,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         String currency = request.getCurrency();
         if (isBlank(currency) || !SUPPORTED_CURRENCIES.contains(currency.trim().toUpperCase())) {
-            throw new ValidationException(ErrorCode.INVALID_CURRENCY, "Currency must be one of USD, EUR, GBP");
+            throw new ValidationException(ErrorCode.INVALID_CURRENCY, "Currency must be one of USD, EUR, GBP, INR");
         }
 
         if (request.getPaymentIntentId() != null) {

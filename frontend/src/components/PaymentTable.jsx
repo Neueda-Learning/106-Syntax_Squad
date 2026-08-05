@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
+import { getConvertedAmountInfo } from "../utils/currency";
 
 export default function PaymentTable({ payments, role }) {
   const fromPath = role === "sent" ? "/payments/sent" : "/payments/received";
@@ -27,6 +28,20 @@ export default function PaymentTable({ payments, role }) {
               <td>{role === "sent" ? payment.destAccount : payment.sourceAccount}</td>
               <td>
                 {payment.amount} {payment.currency}
+                {payment.status === "VALIDATED" ? (
+                  (() => {
+                    const conversion = getConvertedAmountInfo(payment.amount, payment.currency);
+                    if (!conversion) {
+                      return null;
+                    }
+                    return (
+                      <div className="converted-hint">
+                        Converted for balance: {conversion.convertedAmount.toFixed(2)} {conversion.baseCurrency}
+                        {conversion.wasConverted ? "" : " (no conversion needed)"}
+                      </div>
+                    );
+                  })()
+                ) : null}
               </td>
               <td>
                 <StatusBadge status={payment.status} />

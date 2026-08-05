@@ -13,6 +13,12 @@ spring:
     enabled: true
 
 payment:
+  currency:
+    base: USD
+    usd-to-usd: 1.0
+    eur-to-usd: 1.08
+    gbp-to-usd: 1.27
+    inr-to-usd: 0.012
   send:
     success-rate: 0.8
     max-retries: 3

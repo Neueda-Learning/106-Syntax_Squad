@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import StatusBadge from "../components/StatusBadge";
 import Timeline from "../components/Timeline";
 import { getPayment, getPaymentHistory, getSendAttempts, sendPayment } from "../services/api";
+import { getConvertedAmountInfo } from "../utils/currency";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED"]);
 
@@ -90,6 +91,10 @@ export default function PaymentDetailPage() {
     );
   }
 
+  const conversion = payment.status === "VALIDATED"
+    ? getConvertedAmountInfo(payment.amount, payment.currency)
+    : null;
+
   return (
     <div className="detail-page">
       <button className="back-btn" onClick={() => navigate(backPath)}>
@@ -101,6 +106,12 @@ export default function PaymentDetailPage() {
         <p>
           <strong>Amount:</strong> {payment.amount} {payment.currency}
         </p>
+        {conversion ? (
+          <p className="converted-detail">
+            <strong>Converted for balance:</strong> {conversion.convertedAmount.toFixed(2)} {conversion.baseCurrency}
+            {conversion.wasConverted ? ` (from ${conversion.sourceCurrency})` : " (no conversion needed)"}
+          </p>
+        ) : null}
         <p>
           <strong>Source:</strong> {payment.sourceAccount}
         </p>
