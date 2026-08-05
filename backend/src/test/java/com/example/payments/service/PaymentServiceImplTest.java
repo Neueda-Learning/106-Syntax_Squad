@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.payments.dto.CreatePaymentRequest;
@@ -31,6 +32,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -60,9 +62,18 @@ class PaymentServiceImplTest {
     private PaymentStatusHistoryRepository historyRepository;
 
     private PaymentServiceImpl paymentService;
+    private CurrencyConversionService currencyConversionService;
 
     @BeforeEach
     void setUp() {
+        currencyConversionService = new CurrencyConversionService(
+            "USD",
+            new BigDecimal("1.0"),
+            new BigDecimal("1.08"),
+            new BigDecimal("1.27"),
+            new BigDecimal("0.012")
+        );
+
         RetrySendService retrySendService = new RetrySendService(
             paymentRepository,
             paymentSendAttemptRepository,
@@ -81,6 +92,7 @@ class PaymentServiceImplTest {
             paymentSendAttemptRepository,
             historyRepository,
             retrySendService,
+            currencyConversionService,
             new BigDecimal("10000"),
             30,
             "ACC-001"
@@ -110,6 +122,24 @@ class PaymentServiceImplTest {
         );
 
         assertEquals(ErrorCode.VALIDATION_FAILED, exception.getErrorCode());
+    }
+
+    @Test
+    void create_payment_accepts_inr_currency() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> {
+            Payment payment = invocation.getArgument(0);
+            payment.setId(102L);
+            return payment;
+        });
+
+        CreatePaymentRequest request = validCreateRequest();
+        request.setCurrency("inr");
+
+        CreatePaymentResult result = paymentService.createPayment(1L, "idem-inr", request);
+
+        assertTrue(result.isCreated());
+        assertEquals("INR", result.getPayment().getCurrency());
     }
 
     @Test
@@ -192,6 +222,30 @@ class PaymentServiceImplTest {
 
         assertEquals(PaymentStatus.FAILED, transitioned.getStatus());
         assertEquals(ErrorCode.INSUFFICIENT_FUNDS.name(), transitioned.getErrorCode());
+    }
+
+    @Test
+    void gate4_deducts_inr_using_base_currency_conversion() {
+        Payment payment = paymentWithStatus(PaymentStatus.CREATED);
+        payment.setAmount(new BigDecimal("1000.00"));
+        payment.setCurrency("INR");
+
+        Account source = new Account();
+        source.setAccountNumber("ACC-100");
+        source.setBalance(new BigDecimal("20.00"));
+
+        Payment validated = paymentWithStatus(PaymentStatus.VALIDATED);
+
+        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment), Optional.of(validated));
+        when(accountRepository.findById("ACC-100")).thenReturn(Optional.of(source));
+        when(paymentRepository.compareAndSwapStatus(any(), any(), any(), any(), any(), any())).thenReturn(1);
+
+        Payment transitioned = paymentService.transitionStatus(1L, 1L, PaymentStatus.VALIDATED, "manual validation");
+
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(accountCaptor.capture());
+        assertEquals(new BigDecimal("8.00"), accountCaptor.getValue().getBalance());
+        assertEquals(PaymentStatus.VALIDATED, transitioned.getStatus());
     }
 
     @Test

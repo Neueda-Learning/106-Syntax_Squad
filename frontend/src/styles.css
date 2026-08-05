@@ -503,6 +503,18 @@ th {
   color: var(--muted);
 }
 
+.converted-hint {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.converted-detail {
+  margin-top: -0.35rem;
+  color: var(--muted);
+}
+
 .success-banner {
   margin-top: 0.75rem;
   color: #166534;

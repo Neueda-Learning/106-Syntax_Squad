@@ -94,6 +94,7 @@ export default function CreatePaymentPage({ accountNumber }) {
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="GBP">GBP</option>
+            <option value="INR">INR</option>
           </select>
           {fieldErrors.currency ? <small className="error">{fieldErrors.currency}</small> : null}
         </label>
