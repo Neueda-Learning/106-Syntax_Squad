@@ -73,8 +73,14 @@ export default function App() {
             </select>
           </label>
 
-          <button className="theme-toggle" type="button" onClick={toggleTheme}>
-            {theme === "light" ? "Dark Mode" : "Light Mode"}
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+          >
+            {theme === "light" ? "\u263D" : "\u2600\uFE0F"}
           </button>
         </div>
       </header>

@@ -238,6 +238,12 @@ body {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink);
+  font-size: 1.15rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
 }
 
 .theme-toggle:hover {
