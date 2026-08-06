@@ -95,7 +95,17 @@ fi
                 script {
                     def workDir = readFile(env.WORK_DIR_FILE).trim()
                     dir("${workDir}/backend") {
-                        sh 'chmod +x mvnw && ./mvnw -B clean test'
+                        sh '''
+if [ -f mvnw ]; then
+    chmod +x mvnw
+    ./mvnw -B clean test
+elif command -v mvn >/dev/null 2>&1; then
+    mvn -B clean test
+else
+    echo "No Maven executable found. Expected ./mvnw in repo or mvn on Jenkins agent."
+    exit 1
+fi
+'''
                     }
                 }
             }
@@ -116,7 +126,17 @@ fi
                     dir("${workDir}/backend") {
                         // Tests already ran and passed in the "Test Backend" stage above,
                         // so skip re-running them here to avoid doing the work twice.
-                        sh 'chmod +x mvnw && ./mvnw -B package -DskipTests'
+                        sh '''
+if [ -f mvnw ]; then
+    chmod +x mvnw
+    ./mvnw -B package -DskipTests
+elif command -v mvn >/dev/null 2>&1; then
+    mvn -B package -DskipTests
+else
+    echo "No Maven executable found. Expected ./mvnw in repo or mvn on Jenkins agent."
+    exit 1
+fi
+'''
                     }
                 }
             }
