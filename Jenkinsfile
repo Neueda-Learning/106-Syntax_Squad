@@ -183,6 +183,10 @@ JWT_SECRET=${env.JWT_SECRET ?: 'd83f5e2a7c1b94d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8
                     def workDir = readFile(env.WORK_DIR_FILE).trim()
                     def composeCmd = readFile(env.COMPOSE_CMD_FILE).trim()
                     dir(workDir) {
+                        // Ensure no previous deployment stack still holds host ports
+                        // (for example backend on 8082) before we bring services up.
+                        sh "${composeCmd} --env-file .env down --remove-orphans || true"
+
                         // Start MySQL ONLY first and wait for it to be healthy. The backend's
                         // DataInitializer runs schema-dependent queries the moment it boots, so
                         // tables must exist BEFORE the backend container is started — starting
