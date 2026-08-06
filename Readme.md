@@ -121,7 +121,7 @@ graph TD
         Controller[REST Controller Layer<br/>OpenAPI / DTO Validation]
         Security[Security Layer<br/>CurrentUserService Context]
         DTO[DTO / Mapper Layer<br/>Request & Response Converters]
-        Service[Service Layer<br/>PaymentService | PaymentIntentService | RetrySendService]
+        Service[Service Layer<br/>PaymentService &#124; PaymentIntentService &#124; RetrySendService]
         Repo[Repository Layer<br/>Spring Data JPA Repositories]
         Entity[Entity Layer<br/>JPA Domain Entities]
     end
