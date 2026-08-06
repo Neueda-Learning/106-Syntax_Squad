@@ -148,7 +148,7 @@ If the same payment request is submitted multiple times with the same idempotenc
 
 Install:
 
-* Java 21+
+* Java 17
 * Maven
 * MySQL Database
 
@@ -159,21 +159,13 @@ Install:
 Create a database:
 
 ```sql
-CREATE DATABASE payments;
+CREATE DATABASE payments_mvp;
 ```
 
 Update database credentials in:
 
 ```
-backend/src/main/resources/application.properties
-```
-
-Example:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/payments
-spring.datasource.username=root
-spring.datasource.password=password
+backend/src/main/resources/application.yml
 ```
 
 Flyway automatically executes migration scripts:
@@ -362,18 +354,6 @@ Run tests:
 mvn test
 ```
 
----
-
-# Future Enhancements
-
-Possible improvements:
-
-* Real-time payment notifications
-* Email/SMS alerts
-* Payment gateway integration
-* Advanced analytics dashboard
-* Transaction reporting
-* Role-based access control
 
 ---
 
