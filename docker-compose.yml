@@ -42,7 +42,7 @@ services:
       target: frontend
     container_name: tms-frontend
     ports:
-      - "3000:80"
+      - "8085:80"
     depends_on:
       - backend
     networks:
