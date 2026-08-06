@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createPayment, updatePaymentStatus } from "../services/api";
+import { getConvertedAmountInfo } from "../utils/currency";
 
 const INITIAL_FORM = {
   destAccount: "",
@@ -14,6 +15,7 @@ export default function CreatePaymentPage({ accountNumber }) {
   const [globalError, setGlobalError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const conversion = getConvertedAmountInfo(form.amount, form.currency);
 
   async function handleCreatePayment(event) {
     event.preventDefault();
@@ -97,6 +99,12 @@ export default function CreatePaymentPage({ accountNumber }) {
             <option value="INR">INR</option>
           </select>
           {fieldErrors.currency ? <small className="error">{fieldErrors.currency}</small> : null}
+          {conversion ? (
+            <span className="converted-hint">
+              Converted for balance: {conversion.convertedAmount.toFixed(2)} {conversion.baseCurrency}
+              {conversion.wasConverted ? ` (from ${conversion.sourceCurrency})` : " (no conversion needed)"}
+            </span>
+          ) : null}
         </label>
         <label>
           Reference (optional)
