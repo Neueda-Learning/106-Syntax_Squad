@@ -233,8 +233,27 @@ JWT_SECRET=${env.JWT_SECRET ?: 'd83f5e2a7c1b94d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8
                     def composeCmd = readFile(env.COMPOSE_CMD_FILE).trim()
                     dir(workDir) {
                         sh "${composeCmd} --env-file .env ps"
+                        sh '''
+ready=0
+for i in $(seq 1 30); do
+    if curl -fsS http://localhost:8082/api/actuator/health >/dev/null 2>&1; then
+        echo "Backend health endpoint is reachable."
+        ready=1
+        break
+    fi
+
+    status=$(docker inspect -f "{{.State.Health.Status}}" tms-backend 2>/dev/null || echo "unknown")
+    echo "Waiting for backend health... (${i}/30), container health: ${status}"
+    sleep 5
+done
+
+if [ "$ready" -ne 1 ]; then
+    echo "Backend did not become healthy in time. Recent backend logs:"
+    docker logs --tail 200 tms-backend || true
+    exit 1
+fi
+'''
                     }
-                    sh 'curl -fsS http://localhost:8082/api/actuator/health'
                 }
             }
         }
