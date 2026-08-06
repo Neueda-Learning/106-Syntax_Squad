@@ -91,9 +91,7 @@ export default function PaymentDetailPage() {
     );
   }
 
-  const conversion = payment.status === "VALIDATED"
-    ? getConvertedAmountInfo(payment.amount, payment.currency)
-    : null;
+  const conversion = getConvertedAmountInfo(payment.amount, payment.currency);
 
   return (
     <div className="detail-page">

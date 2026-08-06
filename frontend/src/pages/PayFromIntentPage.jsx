@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createPayment, getPaymentIntent, updatePaymentStatus } from "../services/api";
+import { getConvertedAmountInfo } from "../utils/currency";
 
 const INITIAL_FORM = {
   amount: "",
@@ -16,6 +17,7 @@ export default function PayFromIntentPage({ activeAccount }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const conversion = getConvertedAmountInfo(form.amount, form.currency);
 
   useEffect(() => {
     async function loadIntent() {
@@ -108,6 +110,12 @@ export default function PayFromIntentPage({ activeAccount }) {
                 <option value="GBP">GBP</option>
                 <option value="INR">INR</option>
               </select>
+              {conversion ? (
+                <span className="converted-hint">
+                  Converted for balance: {conversion.convertedAmount.toFixed(2)} {conversion.baseCurrency}
+                  {conversion.wasConverted ? ` (from ${conversion.sourceCurrency})` : " (no conversion needed)"}
+                </span>
+              ) : null}
             </label>
 
             <label>
