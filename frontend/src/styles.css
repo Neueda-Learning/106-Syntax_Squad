@@ -329,6 +329,39 @@ th {
   color: var(--muted);
 }
 
+tbody tr.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+tbody tr.clickable-row:hover {
+  background-color: rgba(15, 118, 110, 0.08);
+}
+
+tbody tr.clickable-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.payment-id-chip {
+  display: inline-block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-strong);
+  background: rgba(15, 118, 110, 0.1);
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  border-radius: 8px;
+  padding: 0.2rem 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+[data-theme="dark"] .payment-id-chip {
+  color: #99f6e4;
+  background: rgba(20, 184, 166, 0.15);
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
 .badge {
   display: inline-block;
   border-radius: 999px;

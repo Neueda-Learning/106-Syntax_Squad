@@ -1,9 +1,14 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import { getConvertedAmountInfo } from "../utils/currency";
 
 export default function PaymentTable({ payments, role }) {
+  const navigate = useNavigate();
   const fromPath = role === "sent" ? "/payments/sent" : "/payments/received";
+
+  function goToDetail(paymentId) {
+    navigate(`/payments/${paymentId}`, { state: { from: fromPath } });
+  }
 
   return (
     <div className="table-wrap">
@@ -19,11 +24,21 @@ export default function PaymentTable({ payments, role }) {
         </thead>
         <tbody>
           {payments.map((payment) => (
-            <tr key={payment.id}>
+            <tr
+              key={payment.id}
+              className="clickable-row"
+              tabIndex={0}
+              role="button"
+              onClick={() => goToDetail(payment.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  goToDetail(payment.id);
+                }
+              }}
+            >
               <td>
-                <Link to={`/payments/${payment.id}`} state={{ from: fromPath }}>
-                  {payment.id}
-                </Link>
+                <span className="payment-id-chip">{payment.id}</span>
               </td>
               <td>{role === "sent" ? payment.destAccount : payment.sourceAccount}</td>
               <td>
