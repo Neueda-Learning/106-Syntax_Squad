@@ -52,7 +52,7 @@ export default function App() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <h1>Payment Processing Trainer</h1>
+          <h1>Payment Processing Application</h1>
           <p>Lifecycle: payee → intent → CREATED → VALIDATED → SENT → COMPLETED / FAILED</p>
         </div>
         <div className="topbar-actions">
